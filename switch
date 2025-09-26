@@ -1,0 +1,71 @@
+// Функция: возвращает количество дней в заданном месяце для данного года.
+fun getDaysInMonth(month: Int, year: Int): Int {
+    return when (month) {
+        1, 3, 5, 7, 8, 10, 12 -> 31
+        4, 6, 9, 11 -> 30
+        2 -> if (isLeapYear(year)) 29 else 28
+        else -> 0
+    }
+}
+
+// Функция: проверяет, является ли год високосным и возвращает true если год високосный, иначе false
+fun isLeapYear(year: Int): Boolean {
+    return when {
+        year % 400 == 0 -> true
+        year % 100 == 0 -> false
+        else -> year % 4 == 0
+    }
+}
+
+// Функция: проверяет корректность введённой даты (день, месяц, год).
+fun isValidDate(day: Int, month: Int, year: Int): Boolean {
+    if (year < 1) return false
+    if (month < 1 || month > 12) return false
+    if (day < 1) return false
+    val daysInMonth = getDaysInMonth(month, year)
+    return day <= daysInMonth
+}
+
+// Функция: возвращает дату, которая наступит через ровно 7 дней. На выходе три переменные новые день, месяц и год
+fun addWeek(day: Int, month: Int, year: Int): Triple<Int, Int, Int> {
+    var newDay = day + 7
+    var newMonth = month
+    var newYear = year
+    val daysInMonth = getDaysInMonth(newMonth, newYear)
+    if (newDay > daysInMonth) {
+        newDay -= daysInMonth
+        newMonth++
+
+        if (newMonth > 12) {
+            newMonth = 1
+            newYear++
+        }
+    }
+    return Triple(newDay, newMonth, newYear)
+}
+
+fun main() {
+    println("Введите день: ")
+    val day = readlnOrNull()?.toIntOrNull()
+    println("Введите месяц: ")
+    val month = readlnOrNull()?.toIntOrNull()
+    println("Введите год: ")
+    val year = readlnOrNull()?.toIntOrNull()
+    if (day == null || month == null || year == null) {
+        println("Ввод некорректен: ожидаются целые числа для дня, месяца и года.")
+    } else if (!isValidDate(day, month, year)) {
+        println("Такая дата не существует.")
+    } else {
+        println("Такая дата существует.")
+
+        val (newDay, newMonth, newYear) = addWeek(day, month, year)
+
+        if (newMonth == month) {
+            println("Месяц остался тем же: $newMonth")
+        } else {
+            println("Месяц изменился: $newMonth")
+        }
+
+        println("Дата через неделю: День $newDay Месяц $newMonth Год $newYear")
+    }
+}
