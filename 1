@@ -1,0 +1,28 @@
+fun main() {
+    println("Введите неотрицательное целое число:")
+    val digit = readlnOrNull()?.toIntOrNull()
+    if (digit != null && digit >= 0) {
+        println("Введено корректное число")
+        val result = calc(digit)
+        println("Произведение цифр числа кратным трём:$result")
+    } else {
+        println("Число введено не верно, попробуйте снова")
+    }
+}
+
+fun calc(digit: Int): Int {
+    var n = digit
+    var product = 1
+    if (n == 0) {
+        return 0
+    }
+    while (n > 0) {
+        val last = n % 10
+        n /= 10
+
+        if (last % 3 == 0) {
+            product *= last
+        }
+    }
+    return product
+}
