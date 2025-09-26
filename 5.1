@@ -1,0 +1,21 @@
+fun calc2(number: Int, condition: (Int) -> Boolean): Int {
+    var n = number
+    var product = 1
+
+    while (n > 0) {
+        val last = n % 10
+        n /= 10
+        if (condition(last)) {
+            product *= last
+        }
+    }
+    return product
+}
+
+fun main() {
+    val number = 2793
+    val multipleOfThree: (Int) -> Boolean = { digit -> digit % 3 == 0}
+    val result = calc2(number, multipleOfThree)
+    println("Исходное число: $number")
+    println("Произведение цифр, кратных трем: $result")
+}
