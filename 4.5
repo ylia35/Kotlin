@@ -1,0 +1,10 @@
+fun main() = println(
+    List(readln().toInt()) { readln().split(" ") }                              // читаем число студентов и строки
+        .map { student ->                                                                 // student = ["Фамилия", "Имя", "5", "4", "3"]
+            val marks = student.drop(2).map { it.toInt() }                             // marks = только оценки как числа
+            listOf((marks.maxOrNull()!! - marks.minOrNull()!!).toString()) + student      // разброс + все данные о студенте
+        }
+        .sortedWith(compareBy({ -it[0].toInt() }, { it[1] }))                             // сортировка: по разбросу (убыв.), потом по фамилии
+        .take(3)                                                                       // берём первых трёх
+        .joinToString("\n") { it.drop(1).joinToString(" ") }         // выводим без разброса
+)
