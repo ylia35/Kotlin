@@ -1,0 +1,32 @@
+fun main() {
+    val function1: (Int) -> Int? = { x -> if (x % 2 == 0) x * 2 else null }
+    val function2: (Int) -> Int? = { x -> if (x > 0) x + 5 else null }
+
+    println("Введите число: ")
+    val input = readlnOrNull()?.toIntOrNull()
+
+    if (input == null) {
+        println("Ошибка: введите корректное целое число")
+    }
+    else {
+        val sumFunction = sumFunctions(function1, function2)
+        val result = sumFunction(input)
+
+        if (result == null) {
+            println("Результат: null")
+        } else {
+            println("Результат суммы функций: $result")
+        }
+    }
+}
+
+fun sumFunctions(func1: (Int) -> Int?, func2: (Int) -> Int?): (Int) -> Int? = { x ->
+        val result1 = func1(x)
+        val result2 = func2(x)
+
+        if (result1 == null || result2 == null) {
+            null
+        } else {
+            result1 + result2
+        }
+    }
