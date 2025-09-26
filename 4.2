@@ -1,0 +1,11 @@
+fun main() = println(
+    readlnOrNull()
+        ?.takeIf { it.isNotEmpty() }                 // проверка: строка не пустая
+        ?.split("\\s+".toRegex())                    // разбиваем по одному или нескольким пробелам
+        ?.filter { it.length % 2 == 0 }              // оставляем только слова с чётной длиной
+        ?.let { words ->
+            val maxLen = words.maxOfOrNull { it.length }
+            words.lastOrNull { it.length == maxLen }?.firstOrNull()
+        }
+        ?: "Ввод неправильный или нет слов"                                // если ничего не подошло или ввод некорректный
+)
