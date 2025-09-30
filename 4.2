@@ -1,11 +1,11 @@
 fun main() = println(
     readlnOrNull()
         ?.takeIf { it.isNotEmpty() }
-        ?.split(" ")                                                    //Разбиваем строку на слова по пробелам
+        ?.split(" ")
         ?.filter { it.length % 2 == 0 }
-        ?.let { words ->                                                //Let позволяет работать с значением выполняя для него блок кода
-            val maxLen = words.maxOfOrNull { it.length }                //Находит максиманую длину слова
-            words.lastOrNull { it.length == maxLen }?.firstOrNull()     //Берёт последние слово из списка с максимальной длинной и забирает у него первый символ
+        ?.let { words ->
+            val maxLen = words.maxOfOrNull { it.length }
+            words.lastOrNull { it.length == maxLen }?.firstOrNull()
         }
         ?: "Ввод неправильный или нет слов"
 )
