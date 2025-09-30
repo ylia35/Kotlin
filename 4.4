@@ -1,14 +1,14 @@
 fun main() = println(
     readlnOrNull()
-        ?.takeIf { it.isNotEmpty() }                       // строка не должна быть пустой
-        ?.split(" ")                                       // делим на числа по пробелам
-        ?.mapNotNull { it.toIntOrNull() }                  // преобразуем в Int, пропуская некорректные
-        ?.mapNotNull { n ->                                // берём предпоследнюю цифру, если есть
+        ?.takeIf { it.isNotEmpty() }
+        ?.split(" ")
+        ?.mapNotNull { it.toIntOrNull() }
+        ?.mapNotNull { n ->
             n.toString().let { s ->
                 if (s.length >= 2) s[s.length - 2].digitToInt() else null
             }
         }
-        ?.takeIf { it.isNotEmpty() }                       // если цифр нет — результат "Нет цифр"
-        ?.reduceRight { a, b -> (a or b).inv() }           // справа налево: стрелка Пирса
+        ?.takeIf { it.isNotEmpty() }
+        ?.reduceRight { a, b -> (a or b).inv() }
         ?: "Нет цифр"
 )
