@@ -1,8 +1,8 @@
 fun main() = println(
     readlnOrNull()
-        ?.takeIf { it.all { char -> char.isDigit() } }  // проверяем, что все символы — цифры
-        ?.map { it - '0' }                              // переводим каждый символ в цифру
-        ?.filter { it % 3 == 0 }                        // оставляем цифры, кратные 3
-        ?.let { if (it.isEmpty()) 0 else it.fold(1) { acc, d -> acc * d } }  // считаем произведение или 0
-        ?: "Ошибка ввода"                               // если проверка не прошла
+        ?.takeIf { it.all { char -> char.isDigit() } }
+        ?.map { it.digitToInt() }
+        ?.filter { it % 3 == 0 }
+        ?.let { if (it.isEmpty()) 1 else it.fold(1) { product, d -> product * d } }
+        ?: "Ошибка ввода"
 )
