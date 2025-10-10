@@ -1,0 +1,8 @@
+fun isValidInput(value: Any?): Boolean {
+    return when (value) {
+        is Int, is Double -> true
+        is String -> value.toDoubleOrNull() != null
+        is Boolean -> false
+        else -> false
+    }
+}
