@@ -1,0 +1,44 @@
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+
+class IsValidInputTest {
+
+    @Test
+    fun `Int should be valid`() {
+        assertTrue(isValidInput(42))
+    }
+
+    @Test
+    fun `Double should be valid`() {
+        assertTrue(isValidInput(3.14))
+    }
+
+    @Test
+    fun `Numeric string should be valid`() {
+        assertTrue(isValidInput("123"))
+        assertTrue(isValidInput("12.5"))
+    }
+
+    @Test
+    fun `Non-numeric string should be invalid`() {
+        assertFalse(isValidInput("abc"))
+        assertFalse(isValidInput("12a"))
+    }
+
+    @Test
+    fun `Boolean should be invalid`() {
+        assertFalse(isValidInput(true))
+        assertFalse(isValidInput(false))
+    }
+
+    @Test
+    fun `Null should be invalid`() {
+        assertFalse(isValidInput(null))
+    }
+
+    @Test
+    fun `Other types should be invalid`() {
+        assertFalse(isValidInput(listOf(1)))
+        assertFalse(isValidInput(mapOf("a" to 1)))
+    }
+}
