@@ -1,3 +1,7 @@
+// isValidInput: Вернуть true, если значение может быть использовано как корректный
+//ввод для калькулятора. Для Int, Double — true. Для String, содержащей число — true.
+//Для Boolean — false. Для всех остальных — false
+
 fun isValidInput(value: Any?): Boolean {
     return when (value) {
         is Int, is Double -> true
