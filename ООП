@@ -20,7 +20,7 @@ abstract class HardDrive(
 class InternalHardDrive(
     name: String,
     capacity: Int,
-    private val sizeInches: Double // свойство теперь приватное
+    private val sizeInches: Double
 ) : HardDrive(name, capacity) {
     override fun getInfo(): String {
         return "Внутренний диск: $name, ёмкость: ${capacity}ГБ, размер: ${sizeInches}\""
@@ -31,7 +31,7 @@ class InternalHardDrive(
 class ExternalHardDrive(
     name: String,
     capacity: Int,
-    private val hasDropProtection: Boolean // свойство теперь приватное
+    private val hasDropProtection: Boolean
 ) : HardDrive(name, capacity) {
     override fun getInfo(): String {
         val protection = if (hasDropProtection) "есть защита от падения" else "нет защиты"
@@ -60,13 +60,39 @@ class HardDriveManager {
 fun main() {
     val manager = HardDriveManager()
 
-    // Добавляем диски
-    manager.addDrive(InternalHardDrive("Seagate BarraCuda", 500, 3.5))
-    manager.addDrive(ExternalHardDrive("WD Elements", 1000, true))
-    manager.addDrive(InternalHardDrive("Kingston SSD", 120, 2.5))
-    manager.addDrive(ExternalHardDrive("Toshiba Canvio", 200, false))
+    println("Сколько дисков вы хотите ввести?")
+    val countInput = readlnOrNull()
+    val count = countInput?.toIntOrNull() ?: run {
+        println("Некорректное количество, программа завершена.")
+        return
+    }
 
-    println("Все диски:")
+    repeat(count) {
+        println("\nВведите тип диска (внутренний / внешний):")
+        val type = readlnOrNull()?.trim()?.lowercase() ?: return
+
+        println("Введите название диска:")
+        val name = readlnOrNull()?.trim() ?: return
+
+        println("Введите ёмкость (в ГБ):")
+        val capacity = readlnOrNull()?.toIntOrNull() ?: return
+
+        when (type) {
+            "внутренний" -> {
+                println("Введите размер (2.5 или 3.5):")
+                val size = readlnOrNull()?.toDoubleOrNull() ?: return
+                manager.addDrive(InternalHardDrive(name, capacity, size))
+            }
+            "внешний" -> {
+                println("Есть ли защита от падения? (да/нет):")
+                val hasProtection = readlnOrNull()?.trim()?.lowercase() == "да"
+                manager.addDrive(ExternalHardDrive(name, capacity, hasProtection))
+            }
+            else -> println("Неизвестный тип диска, пропущен.")
+        }
+    }
+
+    println("\nВсе диски:")
     manager.showAll()
 
     println("\nДиски с ёмкостью более 200 ГБ:")
