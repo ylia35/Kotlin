@@ -1,10 +1,24 @@
-fun main() = println(
-    List(readln().toInt()) { readln().split(" ") }
-        .map { student ->
-            val marks = student.drop(2).map { it.toInt() }
-            listOf((marks.maxOrNull()!! - marks.minOrNull()!!).toString()) + student
+fun main() = readlnOrNull()
+    ?.trim()
+    ?.split(";")
+    ?.mapNotNull { line ->
+        val parts = line.split(" ").map { it.trim() }
+        if (parts.size < 3) null
+        else {
+            val grades = parts.drop(2).mapNotNull { it.toIntOrNull()?.takeIf { g -> g in 1..5 } }
+            if (grades.isEmpty()) null else Triple(parts[0], parts[1], grades)
         }
-        .sortedWith(compareBy({ -it[0].toInt() }, { it[1] }))
-        .take(3)
-        .joinToString("\n") { it.drop(1).joinToString(" ") }
-)
+    }
+    ?.map { Triple(it.first, it.second, it.third.maxOrNull()!! - it.third.minOrNull()!!) }
+    ?.sortedWith(compareByDescending<Triple<String, String, Int>> { it.third }
+        .thenBy { it.first }
+        .thenBy { it.second })
+    ?.let { list ->
+        if (list.size < 3) emptyList()
+        else {
+            val minDiff = list.take(3).last().third
+            list.filter { it.third >= minDiff }
+        }
+    }
+    ?.forEach { (last, first, diff) -> println("$last $first: $diff") }
+    ?: println("Некорректный ввод")
