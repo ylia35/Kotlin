@@ -1,0 +1,71 @@
+// Интерфейс для всех устройств хранения данных
+interface StorageDevice {
+    val name: String
+    val capacity: Int // в ГБ
+}
+
+// Базовый абстрактный класс
+abstract class HardDrive(
+    override val name: String,
+    override val capacity: Int
+) : StorageDevice {
+    abstract fun getInfo(): String
+}
+
+// Внутренний жёсткий диск
+class InternalHardDrive(
+    name: String,
+    capacity: Int,
+    private val sizeInches: Double // свойство теперь приватное
+) : HardDrive(name, capacity) {
+    override fun getInfo(): String {
+        return "Внутренний диск: $name, ёмкость: ${capacity}ГБ, размер: ${sizeInches}\""
+    }
+}
+
+// Внешний жёсткий диск
+class ExternalHardDrive(
+    name: String,
+    capacity: Int,
+    private val hasDropProtection: Boolean // свойство теперь приватное
+) : HardDrive(name, capacity) {
+    override fun getInfo(): String {
+        val protection = if (hasDropProtection) "есть защита от падения" else "нет защиты"
+        return "Внешний диск: $name, ёмкость: ${capacity}ГБ, $protection"
+    }
+}
+
+// Класс для управления списком дисков
+class HardDriveManager {
+    private val drives = mutableListOf<HardDrive>()
+
+    fun addDrive(drive: HardDrive) {
+        drives.add(drive)
+    }
+
+    fun getDrivesOverCapacity(minCapacity: Int): List<HardDrive> {
+        return drives.filter { it.capacity > minCapacity }
+    }
+
+    fun showAll() {
+        drives.forEach { println(it.getInfo()) }
+    }
+}
+
+// Точка входа
+fun main() {
+    val manager = HardDriveManager()
+
+    // Добавляем диски
+    manager.addDrive(InternalHardDrive("Seagate BarraCuda", 500, 3.5))
+    manager.addDrive(ExternalHardDrive("WD Elements", 1000, true))
+    manager.addDrive(InternalHardDrive("Kingston SSD", 120, 2.5))
+    manager.addDrive(ExternalHardDrive("Toshiba Canvio", 200, false))
+
+    println("Все диски:")
+    manager.showAll()
+
+    println("\nДиски с ёмкостью более 200 ГБ:")
+    val largeDrives = manager.getDrivesOverCapacity(200)
+    largeDrives.forEach { println(it.getInfo()) }
+}
