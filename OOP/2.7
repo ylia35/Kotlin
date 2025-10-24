@@ -1,0 +1,129 @@
+package oop
+
+// Свойства и методы для всех рек
+interface River {
+    val name: String
+    val length: Double
+    fun info()
+}
+
+// Класс простой реки
+class BasicRiver(
+    override val name: String,
+    override val length: Double
+) : River {
+    override fun info() {
+        println("Река: $name, длина: $length км")
+    }
+}
+
+// Судоходная река
+class NavigableRiver(
+    private val river: River,
+    private val width: Double,
+    private val depth: Double
+) : River by river {
+    override fun info() {
+        river.info()
+        println("  Судоходная: ширина = $width м, глубина = $depth м")
+    }
+}
+
+// Река для водоснабжения
+class WaterSupplyRiver(
+    private val river: River,
+    private val dailyIntake: Double,
+    private val stationName: String
+) : River by river {
+    override fun info() {
+        river.info()
+        println("  Используется для водоснабжения: $stationName (водозабор $dailyIntake м³/сут)")
+    }
+}
+
+fun main() {
+    print("Введите количество рек: ")
+    val countInput = readlnOrNull()
+    if (countInput == null) {
+        println("\nВвод прерван пользователем. Завершение программы.")
+        return
+    }
+    val count = countInput.toIntOrNull()
+    if (count == null || count <= 0) {
+        println("Ошибка: нужно ввести положительное целое число.")
+        return
+    }
+
+    val rivers = mutableListOf<River>()
+
+    for (i in 1..count) {
+        println("\nРека №$i:")
+
+        print("Введите название: ")
+        val name = readlnOrNull()?.takeIf { it.isNotBlank() } ?: run {
+            println("Ошибка: название не может быть пустым.")
+            return
+        }
+
+        print("Введите длину (в км): ")
+        val length = readlnOrNull()?.toDoubleOrNull()?.takeIf { it > 0 } ?: run {
+            println("Ошибка: длина должна быть положительным числом.")
+            return
+        }
+
+        println("Выберите тип реки:")
+        println("1 — обычная")
+        println("2 — судоходная")
+        println("3 — используется для водоснабжения")
+        print("Ваш выбор: ")
+
+        when (readlnOrNull()) {
+            "1" -> {
+                rivers.add(BasicRiver(name, length))
+            }
+
+            "2" -> {
+                print("Введите ширину (в м): ")
+                val width = readlnOrNull()?.toDoubleOrNull()?.takeIf { it > 0 } ?: run {
+                    println("Ошибка: ширина должна быть положительным числом.")
+                    return
+                }
+
+                print("Введите глубину (в м): ")
+                val depth = readlnOrNull()?.toDoubleOrNull()?.takeIf { it > 0 } ?: run {
+                    println("Ошибка: глубина должна быть положительным числом.")
+                    return
+                }
+
+                rivers.add(NavigableRiver(BasicRiver(name, length), width, depth))
+            }
+
+            "3" -> {
+                print("Введите суточный водозабор (м³/сут): ")
+                val dailyIntake = readlnOrNull()?.toDoubleOrNull()?.takeIf { it > 0 } ?: run {
+                    println("Ошибка: водозабор должен быть положительным числом.")
+                    return
+                }
+
+                print("Введите название станции: ")
+                val station = readlnOrNull()?.takeIf { it.isNotBlank() } ?: run {
+                    println("Ошибка: название станции не может быть пустым.")
+                    return
+                }
+
+                rivers.add(WaterSupplyRiver(BasicRiver(name, length), dailyIntake, station))
+            }
+
+            else -> {
+                println("Ошибка: неверный выбор типа реки.")
+                return
+            }
+        }
+    }
+
+    println("\nИнформация о всех реках:\n")
+    rivers.forEach { river ->
+        river.info()
+        println()
+    }
+}
