@@ -1,14 +1,15 @@
 //Жёсткие диски. Определяются названием и ёмкостью. Внешние — наличием си
 //стемы защиты от падения; внутренние — размером (2.5"или 3.5"). Выведите диски
 //ёмкостью более 200 ГБ.
+package oop
 
-// Интерфейс для всех устройств хранения данных
+// Класс для всех устройств хранения данных
 interface StorageDevice {
     val name: String
-    val capacity: Int // в ГБ
+    val capacity: Int
 }
 
-// Базовый абстрактный класс
+// Класс диск
 abstract class HardDrive(
     override val name: String,
     override val capacity: Int
@@ -23,7 +24,7 @@ class InternalHardDrive(
     private val sizeInches: Double
 ) : HardDrive(name, capacity) {
     override fun getInfo(): String {
-        return "Внутренний диск: $name, ёмкость: ${capacity}ГБ, размер: ${sizeInches}\""
+        return "Внутренний диск: $name, ёмкость: ${capacity}ГБ, размер: $sizeInches\""
     }
 }
 
@@ -50,52 +51,119 @@ class HardDriveManager {
     fun getDrivesOverCapacity(minCapacity: Int): List<HardDrive> {
         return drives.filter { it.capacity > minCapacity }
     }
+}
 
-    fun showAll() {
-        drives.forEach { println(it.getInfo()) }
+// Проверки
+class InputValidator {
+
+    fun readPositiveInt(prompt: String): Int? {
+        println(prompt)
+        val input = readlnOrNull()
+        val number = input?.toIntOrNull()
+        if (number == null || number <= 0) {
+            println("Ошибка: нужно ввести положительное число.")
+            return null
+        }
+        return number
+    }
+
+    fun readNonEmptyString(prompt: String): String? {
+        println(prompt)
+        val input = readlnOrNull()?.trim()
+        if (input.isNullOrEmpty()) {
+            println("Ошибка: строка не может быть пустой.")
+            return null
+        }
+        return input
+    }
+
+    fun readDriveType(): String? {
+        println("Введите тип диска (внутренний / внешний):")
+        val input = readlnOrNull()?.trim()?.lowercase()
+        if (input != "внутренний" && input != "внешний") {
+            println("Ошибка: тип должен быть 'внутренний' или 'внешний'.")
+            return null
+        }
+        return input
+    }
+
+    fun readDriveSize(): Double? {
+        println("Введите размер (2.5 или 3.5):")
+        val input = readlnOrNull()?.trim()
+        val size = input?.toDoubleOrNull()
+        if (size == null || (size != 2.5 && size != 3.5)) {
+            println("Ошибка: размер должен быть именно 2.5 или 3.5.")
+            return null
+        }
+        return size
+    }
+
+    fun readDropProtection(): Boolean? {
+        println("Есть ли защита от падения? (да/нет):")
+        val input = readlnOrNull()?.trim()?.lowercase()
+        return when (input) {
+            "да" -> true
+            "нет" -> false
+            else -> {
+                println("Ошибка: нужно ввести 'да' или 'нет'.")
+                null
+            }
+        }
     }
 }
 
-// Точка входа
+// Главная функция
 fun main() {
     val manager = HardDriveManager()
+    val validator = InputValidator()
 
-    println("Сколько дисков вы хотите ввести?")
-    val countInput = readlnOrNull()
-    val count = countInput?.toIntOrNull() ?: run {
-        println("Некорректное количество, программа завершена.")
-        return
-    }
+    val count = validator.readPositiveInt("Сколько дисков вы хотите ввести?") ?: return
 
-    repeat(count) {
-        println("\nВведите тип диска (внутренний / внешний):")
-        val type = readlnOrNull()?.trim()?.lowercase() ?: return
+    var index = 0
+    while (index < count) {
+        println("\nВвод данных для диска №${index + 1}")
 
-        println("Введите название диска:")
-        val name = readlnOrNull()?.trim() ?: return
-
-        println("Введите ёмкость (в ГБ):")
-        val capacity = readlnOrNull()?.toIntOrNull() ?: return
-
-        when (type) {
-            "внутренний" -> {
-                println("Введите размер (2.5 или 3.5):")
-                val size = readlnOrNull()?.toDoubleOrNull() ?: return
-                manager.addDrive(InternalHardDrive(name, capacity, size))
-            }
-            "внешний" -> {
-                println("Есть ли защита от падения? (да/нет):")
-                val hasProtection = readlnOrNull()?.trim()?.lowercase() == "да"
-                manager.addDrive(ExternalHardDrive(name, capacity, hasProtection))
-            }
-            else -> println("Неизвестный тип диска, пропущен.")
+        val type = validator.readDriveType()
+        if (type == null) {
+            index++
+            continue
         }
+
+        val name = validator.readNonEmptyString("Введите название диска:")
+        if (name == null) {
+            index++
+            continue
+        }
+
+        val capacity = validator.readPositiveInt("Введите ёмкость (в ГБ):")
+        if (capacity == null) {
+            index++
+            continue
+        }
+
+        if (type == "внутренний") {
+            val size = validator.readDriveSize()
+            if (size == null) {
+                index++
+                continue
+            }
+            manager.addDrive(InternalHardDrive(name, capacity, size))
+        } else {
+            val hasProtection = validator.readDropProtection()
+            if (hasProtection == null) {
+                index++
+                continue
+            }
+            manager.addDrive(ExternalHardDrive(name, capacity, hasProtection))
+        }
+
+        index++
     }
 
     println("\nВсе диски:")
-    manager.showAll()
 
     println("\nДиски с ёмкостью более 200 ГБ:")
     val largeDrives = manager.getDrivesOverCapacity(200)
     largeDrives.forEach { println(it.getInfo()) }
 }
+// readDropProtection это не должно получать ничего на ввод
