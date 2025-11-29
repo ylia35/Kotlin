@@ -1,0 +1,77 @@
+package com.example.first
+
+import org.junit.Test
+import org.junit.Assert.*
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.pow
+
+class ExampleUnitTest {
+    // Форматирует комплексное число в строку с точкой как разделитель и тремя знаками после запятой
+    private fun formatComplex(real: Double, imag: Double): String {
+        val sign = if (imag >= 0) "+" else "-"
+        val realStr = "%.3f".format(Locale.US, real)
+        val imagStr = "%.3f".format(Locale.US, abs(imag))
+
+        return "$realStr $sign $imagStr" + "i"
+    }
+
+    // Тесты для функции formatComplex
+    @Test
+    fun formatComplex_positiveImaginary() {
+        val result = formatComplex(1.0, 2.0)
+        assertEquals("1.000 + 2.000i", result) // Точка
+    }
+
+    @Test
+    fun formatComplex_negativeImaginary() {
+        val result = formatComplex(1.5, -2.5)
+        assertEquals("1.500 - 2.500i", result) // Точка
+    }
+
+    @Test
+    fun formatComplex_zeroRealPart() {
+        val result = formatComplex(0.0, 5.5)
+        assertEquals("0.000 + 5.500i", result) // Точка
+    }
+
+    @Test
+    fun formatComplex_zeroImaginaryPart() {
+        val result = formatComplex(3.14159, 0.0)
+        assertEquals("3.142 + 0.000i", result) // Точка
+    }
+
+    @Test
+    fun formatComplex_negativeRealAndNegativeImaginary() {
+        val result = formatComplex(-10.12345, -0.50)
+        assertEquals("-10.123 - 0.500i", result) // Точка
+    }
+
+    // Тесты для арифметики комплексных чисел
+    @Test
+    fun complexMultiplication_basic() {
+        val a = 1.0; val b = 2.0
+        val c = 3.0; val d = 4.0
+
+        val realMul = a * c - b * d
+        val imagMul = a * d + b * c
+
+        assertEquals(-5.0, realMul, 0.0001)
+        assertEquals(10.0, imagMul, 0.0001)
+        assertEquals("-5.000 + 10.000i", formatComplex(realMul, imagMul))
+    }
+
+    @Test
+    fun complexDivision_basic() {
+        val a = 1.0; val b = 2.0
+        val c = 3.0; val d = 4.0
+        val denom = c.pow(2) + d.pow(2)
+
+        val realDiv = (a * c + b * d) / denom
+        val imagDiv = (b * c - a * d) / denom
+
+        assertEquals(0.44, realDiv, 0.0001)
+        assertEquals(0.08, imagDiv, 0.0001)
+        assertEquals("0.440 + 0.080i", formatComplex(realDiv, imagDiv))
+    }
+}
