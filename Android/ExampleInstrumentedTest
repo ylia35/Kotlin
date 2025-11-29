@@ -1,0 +1,130 @@
+package com.example.first
+
+import androidx.compose.ui.test.*
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.Assert.*
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.compose.material3.MaterialTheme
+
+@RunWith(AndroidJUnit4::class)
+class ExampleInstrumentedTest {
+
+    @get:Rule
+    val composeTestRule = createComposeRule()
+
+    private val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+    private fun getString(resId: Int): String {
+        return appContext.resources.getString(resId)
+    }
+
+    @Test
+    fun useAppContext() {
+        assertEquals("com.example.first", appContext.packageName)
+    }
+
+    @Test
+    fun calculator_performsMultiplicationAndDivision_correctly() {
+        val calculateButtonText = getString(R.string.calculate)
+
+        composeTestRule.setContent {
+            MaterialTheme {
+                ComplexCalculatorScreen()
+            }
+        }
+
+        // Ввод данных: (1 + 2i) * (3 + 4i) = (-5 + 10i); (1 + 2i) / (3 + 4i) = (0.44 + 0.08i)
+        composeTestRule.onNodeWithText(getString(R.string.real_part_a)).performTextInput("1")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_b)).performTextInput("2")
+        composeTestRule.onNodeWithText(getString(R.string.real_part_c)).performTextInput("3")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_d)).performTextInput("4")
+        composeTestRule.onNodeWithText(calculateButtonText).performClick()
+
+        // Проверка результатов (должны отобразиться части комплексных чисел)
+        composeTestRule.onNodeWithText("-5.000", substring = true)
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("0.440", substring = true)
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun calculator_handlesDivisionByZero_andShowsError() {
+        val calculateButtonText = getString(R.string.calculate)
+
+        composeTestRule.setContent {
+            MaterialTheme {
+                ComplexCalculatorScreen()
+            }
+        }
+
+        composeTestRule.onNodeWithText(getString(R.string.real_part_a)).performTextInput("1")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_b)).performTextInput("2")
+        composeTestRule.onNodeWithText(getString(R.string.real_part_c)).performTextInput("0")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_d)).performTextInput("0")
+        composeTestRule.onNodeWithText(calculateButtonText).performClick()
+
+        // Проверка ошибки и отсутствия результатов
+        composeTestRule.onNodeWithText("Деление на ноль запрещено!")
+            .assertIsDisplayed()
+        composeTestRule.onNodeWithText("-5.000", substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("0.440", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun calculator_handlesEmptyInput_andShowsError() {
+        val calculateButtonText = getString(R.string.calculate)
+
+        composeTestRule.setContent {
+            MaterialTheme {
+                ComplexCalculatorScreen()
+            }
+        }
+        composeTestRule.onNodeWithText(calculateButtonText).performClick()
+
+        // Проверка ошибки о пустых полях
+        composeTestRule.onNodeWithText("Все поля должны содержать числа!")
+            .assertIsDisplayed()
+    }
+
+    // НОВЫЙ ТЕСТ: Проверка работы кнопки "Очистить"
+    @Test
+    fun calculator_clearsFields_whenClearClicked() {
+        val calculateButtonText = getString(R.string.calculate)
+        val clearButtonText = "Очистить"
+
+        composeTestRule.setContent {
+            MaterialTheme {
+                ComplexCalculatorScreen()
+            }
+        }
+
+        // 1. Ввод данных и расчёт
+        composeTestRule.onNodeWithText(getString(R.string.real_part_a)).performTextInput("1")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_b)).performTextInput("2")
+        composeTestRule.onNodeWithText(getString(R.string.real_part_c)).performTextInput("3")
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_d)).performTextInput("4")
+        composeTestRule.onNodeWithText(calculateButtonText).performClick()
+
+        // 2. Убедиться, что результаты и данные есть
+        composeTestRule.onNodeWithText("5.000", substring = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getString(R.string.real_part_a)).assert(hasText("1"))
+
+        // 3. Нажать кнопку "Очистить"
+        composeTestRule.onNodeWithText(clearButtonText).performClick()
+
+        // 4. Проверить, что поля ввода очищены (содержат пустую строку)
+        composeTestRule.onNodeWithText(getString(R.string.real_part_a)).assert(hasText(""))
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_b)).assert(hasText(""))
+        composeTestRule.onNodeWithText(getString(R.string.real_part_c)).assert(hasText(""))
+        composeTestRule.onNodeWithText(getString(R.string.imag_part_d)).assert(hasText(""))
+
+        // 5. Проверить, что результаты расчётов и ошибки не отображаются
+        composeTestRule.onNodeWithText(getString(R.string.multiplication), substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText(getString(R.string.division), substring = true).assertDoesNotExist()
+        composeTestRule.onNodeWithText("Деление на ноль запрещено!").assertDoesNotExist()
+        composeTestRule.onNodeWithText("Все поля должны содержать числа!").assertDoesNotExist()
+    }
+}
