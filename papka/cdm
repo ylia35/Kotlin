@@ -1,0 +1,130 @@
+import com.googlecode.lanterna.TerminalPosition
+import com.googlecode.lanterna.input.KeyType
+import com.googlecode.lanterna.terminal.DefaultTerminalFactory
+import com.googlecode.lanterna.terminal.Terminal
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.currentCoroutineContext
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
+
+data class Particle(val id: Long, val x: Int, val y: Int, val symbol: Char)
+
+// Главная функция
+fun main() = runBlocking {
+    // Создание терминала
+    val terminalFactory = DefaultTerminalFactory()
+    terminalFactory.setForceTextTerminal(false)
+    terminalFactory.setPreferTerminalEmulator(true)
+
+    val terminal: Terminal = try {
+        terminalFactory.createTerminal()
+    } catch (e: Exception) {
+        println("Не удалось создать терминал. Убедитесь, что ваше окружение поддерживает Lanterna.")
+        println("Ошибка: ${e.message}")
+        return@runBlocking
+    }
+
+    terminal.enterPrivateMode()
+    terminal.clearScreen()
+    terminal.setCursorVisible(false)
+    terminal.flush()
+
+    try {
+        runFireSim(terminal)
+    } finally {
+        terminal.exitPrivateMode()
+    }
+}
+
+// Создание частиц
+suspend fun runFireSim(terminal: Terminal) {
+    val simulationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)                                  // SupervisorJob() позволяет корутинам работать независимо, если одна корутина выдаст ошибку, остальные будут работать
+    val particleUpdatesChannel = Channel<Particle>(Channel.UNLIMITED)                                                    // Dispatchers.Default это удобный и эффективный способ выполнять задачи в фоновом режиме, не создавая для каждой новый поток в ручную
+
+    val activeParticles = ConcurrentHashMap<Long, Particle>()
+    var nextParticleId = 0L
+
+    val terminalSize = terminal.terminalSize
+    val maxWidth = terminalSize.columns
+    val maxHeight = terminalSize.rows
+
+    // Отрисовка и обновление частиц в терминале
+    simulationScope.launch {
+        for (particleUpdate in particleUpdatesChannel) {
+            if (particleUpdate.y <= 0) {
+                activeParticles.remove(particleUpdate.id)
+            } else {
+                activeParticles[particleUpdate.id] = particleUpdate
+            }
+            terminal.clearScreen()
+
+            terminal.cursorPosition = TerminalPosition(2, 0)
+            terminal.putString("Нажмите SPACE для запуска частицы. ESC для выхода.")
+            terminal.cursorPosition = TerminalPosition(2, 1)
+            terminal.putString("Активных частиц: ${activeParticles.size}")
+
+            activeParticles.values.forEach { particle ->
+                if (particle.x in 0 until maxWidth && particle.y in 0 until maxHeight) {
+                    terminal.cursorPosition = TerminalPosition(particle.x, particle.y)
+                    terminal.putCharacter(particle.symbol)
+                }
+            }
+
+            terminal.flush()
+        }
+    }
+
+    // Управление запуском и остановкой
+    simulationScope.launch {
+        while (isActive) {
+            val key = terminal.pollInput()
+
+            when (key?.keyType) {
+                KeyType.Character -> {
+                    if (key.character == ' ') {
+                        val id = nextParticleId++
+                        val initialY = maxHeight - 1
+                        val initialX = Random.nextInt(2, maxWidth - 2)
+                        val symbol = listOf('*', 'o', '+').random()
+                        simulationScope.launch {
+                            particleSimulation(
+                                Particle(id, initialX, initialY, symbol),
+                                particleUpdatesChannel
+                            )
+                        }
+                    }
+                }
+                KeyType.Escape -> {
+                    terminal.clearScreen()
+                    terminal.cursorPosition = TerminalPosition(2, 2)
+                    terminal.flush()
+                    simulationScope.cancel()
+                }
+                else -> {
+                    delay(50)
+                }
+            }
+        }
+    }
+    simulationScope.coroutineContext.job.join()
+}
+
+// Функция движения частиц
+suspend fun particleSimulation(
+    initialParticle: Particle,
+    channel: Channel<Particle>
+) {
+    var currentParticle = initialParticle
+    val stepDelay = Random.nextLong(100, 301)
+
+    while (currentParticle.y >= 0) {
+        currentCoroutineContext().ensureActive()
+        channel.send(currentParticle)
+        delay(stepDelay)
+        currentParticle = currentParticle.copy(y = currentParticle.y - 1)
+    }
+
+    channel.send(currentParticle.copy(y = -1))
+}
