@@ -1,0 +1,192 @@
+package com.example.first
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import kotlin.math.pow
+import kotlin.math.abs
+import java.util.Locale
+private const val MAX_INPUT_LENGTH = 10
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MaterialTheme {
+                ComplexCalculatorScreen()
+            }
+        }
+    }
+}
+
+@Composable
+fun LimitedNumberTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    maxLength: Int = MAX_INPUT_LENGTH
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = {
+            if (it.length <= maxLength) {
+                onValueChange(it)
+            }
+        },
+        label = { Text(label) },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun ComplexCalculatorScreen() {
+    var a by rememberSaveable { mutableStateOf("") }
+    var b by rememberSaveable { mutableStateOf("") }
+    var c by rememberSaveable { mutableStateOf("") }
+    var d by rememberSaveable { mutableStateOf("") }
+
+    var error by rememberSaveable { mutableStateOf("") }
+    var multiplyResult by rememberSaveable { mutableStateOf<String?>(null) }
+    var divideResult by rememberSaveable { mutableStateOf<String?>(null) }
+
+    val scrollState = rememberScrollState()
+    Scaffold(
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+        ) {
+            Text(stringResource(R.string.complex_number_1))
+            LimitedNumberTextField(
+                value = a,
+                onValueChange = { a = it },
+                label = stringResource(R.string.real_part_a)
+            )
+
+            LimitedNumberTextField(
+                value = b,
+                onValueChange = { b = it },
+                label = stringResource(R.string.imag_part_b)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(stringResource(R.string.complex_number_2))
+
+            LimitedNumberTextField(
+                value = c,
+                onValueChange = { c = it },
+                label = stringResource(R.string.real_part_c)
+            )
+
+            LimitedNumberTextField(
+                value = d,
+                onValueChange = { d = it },
+                label = stringResource(R.string.imag_part_d)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = {
+                        val aVal = a.toDoubleOrNull()
+                        val bVal = b.toDoubleOrNull()
+                        val cVal = c.toDoubleOrNull()
+                        val dVal = d.toDoubleOrNull()
+
+                        if (aVal == null || bVal == null || cVal == null || dVal == null) {
+                            error = "Все поля должны содержать числа!"
+                            multiplyResult = null
+                            divideResult = null
+                            return@Button
+                        }
+
+                        val cValSquared = cVal.pow(2)
+                        val dValSquared = dVal.pow(2)
+                        val denom = cValSquared + dValSquared
+
+                        if (denom == 0.0) {
+                            error = "Деление на ноль запрещено!"
+                            multiplyResult = null
+                            divideResult = null
+                            return@Button
+                        }
+                        error = ""
+
+                        val realMul = aVal * cVal - bVal * dVal
+                        val imagMul = aVal * dVal + bVal * cVal
+                        multiplyResult = formatComplex(realMul, imagMul)
+
+                        val realDiv = (aVal * cVal + bVal * dVal) / denom
+                        val imagDiv = (bVal * cVal - aVal * dVal) / denom
+                        divideResult = formatComplex(realDiv, imagDiv)
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.calculate))
+                }
+
+                Button(
+                    onClick = {
+                        a = ""
+                        b = ""
+                        c = ""
+                        d = ""
+                        error = ""
+                        multiplyResult = null
+                        divideResult = null
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(stringResource(R.string.button_clear))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (error.isNotEmpty()) {
+                Text(error, color = Color.Red)
+            }
+
+            multiplyResult?.let {
+                Text("${stringResource(R.string.multiplication)}: $it", color = Color.Blue)
+            }
+
+            divideResult?.let {
+                Text("${stringResource(R.string.division)}: $it", color = Color.Blue)
+            }
+        }
+    }
+}
+
+
+fun formatComplex(real: Double, imag: Double): String {
+    val sign = if (imag >= 0) "+" else "-"
+    val realStr = "%.3f".format(Locale.US, real)
+    val imagStr = "%.3f".format(Locale.US, abs(imag))
+    return "$realStr $sign $imagStr" + "i"
+}
